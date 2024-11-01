@@ -16,5 +16,4 @@ results/
 *.pyc
 
 # Ignore datasets
-Tweets.csv
 
