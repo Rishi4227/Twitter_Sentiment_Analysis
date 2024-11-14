@@ -3,7 +3,8 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from transformers import RobertaTokenizer, RobertaForSequenceClassification, Trainer, TrainingArguments
 import torch
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
+from sklearn.preprocessing import label_binarize
 import os
 
 # Display current working directory
@@ -67,9 +68,16 @@ def compute_metrics(eval_pred):
     logits, labels = eval_pred
     logits = torch.tensor(logits)  # Convert logits to tensors
     predictions = torch.argmax(logits, dim=-1)
+
+    # Calculate accuracy and F1-score
     accuracy = accuracy_score(labels, predictions)
     f1 = f1_score(labels, predictions, average='weighted')  # Weighted for multi-class
-    return {"accuracy": accuracy, "f1": f1}
+
+    # Calculate ROC-AUC (one-vs-rest for multi-class)
+    labels_binarized = label_binarize(labels, classes=[0, 1, 2])  # Adjust classes if needed
+    roc_auc = roc_auc_score(labels_binarized, logits, average='macro', multi_class='ovr')
+    
+    return {"accuracy": accuracy, "f1": f1, "roc_auc": roc_auc}
 
 # %% Load Model and Train
 print("Loading RoBERTa model...")
